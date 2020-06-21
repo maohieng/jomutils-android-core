@@ -1,4 +1,4 @@
-package kh.edu.niptict.learning.kx.utils
+package github.jommobile.android.core
 
 import androidx.lifecycle.LiveData
 

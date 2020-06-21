@@ -29,12 +29,12 @@ interface AppExecutors {
         private val INSTANCE: AppExecutors =
             AppExecutorsImp()
 
-        fun get(): AppExecutors {
+        fun getDefault(): AppExecutors {
             return INSTANCE
         }
     }
 
-    fun diskIO(): Executor?
-    fun networkIO(): Executor?
-    fun mainThread(): Executor?
+    fun diskIO(): Executor
+    fun networkIO(): Executor
+    fun mainThread(): Executor
 }

@@ -27,37 +27,30 @@ import java.util.concurrent.Executors
  * Grouping tasks like this avoids the effects of task starvation (e.g. disk reads don't wait behind
  * webservice requests).
  */
-internal class AppExecutorsImp private constructor(
-    // It should be singleton to not depends on the Application context.
-    //    private static class LazyHolder {
-    //        static final AppExecutorsImp INSTANCE = new AppExecutorsImp();
-    //    }
-    //
-    //    public static AppExecutorsImp getInstance() {
-    //        return LazyHolder.INSTANCE;
-    //    }
-    private val mDiskIO: Executor,
-    private val mNetworkIO: Executor,
-    private val mMainThread: Executor
-) : AppExecutors {
+internal class AppExecutorsImp : AppExecutors {
 
-    constructor() : this(
-        Executors.newSingleThreadExecutor(),
-        Executors.newFixedThreadPool(3),
+    private val _diskIO: Executor by lazy {
+        Executors.newFixedThreadPool(2)
+    }
+
+    private val _networkIO: Executor by lazy {
+        Executors.newFixedThreadPool(3)
+    }
+
+    private val _mainIO: Executor by lazy {
         MainThreadExecutor()
-    ) {
     }
 
     override fun diskIO(): Executor {
-        return mDiskIO
+        return _diskIO
     }
 
     override fun networkIO(): Executor {
-        return mNetworkIO
+        return _networkIO
     }
 
     override fun mainThread(): Executor {
-        return mMainThread
+        return _mainIO
     }
 
     private class MainThreadExecutor : Executor {

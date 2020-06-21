@@ -8,5 +8,5 @@ import androidx.lifecycle.LiveData
  * @autor MAO Hieng 7/19/2019
  */
 interface BoundResource<C> {
-    fun asLiveData(): LiveData<Resource<C>?>?
+    fun asLiveData(): LiveData<Resource<C?>?>
 }

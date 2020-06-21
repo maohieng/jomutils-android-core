@@ -1,4 +1,4 @@
-package github.jommobile.android.core
+package github.jommobile.android
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -177,7 +177,9 @@ object DeviceUtils {
             return if (model.startsWith(manufacturer)) {
                 capitalizeFirstChar(model)
             } else {
-                capitalizeFirstChar(manufacturer) + " " + model
+                capitalizeFirstChar(
+                    manufacturer
+                ) + " " + model
             }
         }
 

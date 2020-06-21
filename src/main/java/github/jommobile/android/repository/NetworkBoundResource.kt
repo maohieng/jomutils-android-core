@@ -17,17 +17,19 @@ import java.util.*
 abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
     appExecutors: AppExecutors?
 ) : DataBoundResource<RESULT>(appExecutors!!) {
-    override fun bind(): BoundResource<RESULT>? {
-        return bind(DatabaseObserver<RESULT> { dbSource: LiveData<RESULT>, data: RESULT ->
-            if (shouldFetch(data)) {
-                fetchFromNetwork(dbSource)
-            } else {
-                result.addSource(
-                    dbSource
-                ) { result: RESULT ->
-                    setValue(
-                        success(result)
-                    )
+    override fun bind(): BoundResource<RESULT> {
+        return bind(object : DatabaseObserver<RESULT> {
+            override fun onChanged(dbSource: LiveData<RESULT>, dbData: RESULT) {
+                if (shouldFetch(dbData)) {
+                    fetchFromNetwork(dbSource)
+                } else {
+                    result.addSource(
+                        dbSource
+                    ) { result: RESULT ->
+                        setValue(
+                            success(result)
+                        )
+                    }
                 }
             }
         })
@@ -35,6 +37,7 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
 
     @MainThread
     protected abstract fun shouldFetch(data: RESULT): Boolean
+
     private fun fetchFromNetwork(dbSource: LiveData<RESULT>) {
         val mainThread = appExecutors.mainThread()
         val callSource =
@@ -45,21 +48,16 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
         )
 
         // we re-attach dbSource as a new source, it will dispatch its latest value quickly
-        result.addSource(
-            dbSource
-        ) { newData: RESULT -> setValue(loading()) }
-        result.addSource(
-            callSource
-        ) { newNetworkSource: Resource<NR>? ->
+        result.addSource(dbSource) { setValue(loading()) }
+
+        result.addSource(callSource) { newNetworkSource: Resource<NR>? ->
             if (newNetworkSource == null) return@addSource
             if (newNetworkSource.status !== Resource.Status.LOADING) {
-                Logs.D(TAG, "Network call result: $newNetworkSource")
                 result.removeSource(callSource)
                 result.removeSource(dbSource)
                 val data = newNetworkSource.data
                 if (data != null) {
                     appExecutors.diskIO().execute {
-                        Logs.D(TAG, "Save network result: $data")
                         saveNetworkResult(data)
                         mainThread.execute {
                             // we specially request a new live data,

@@ -1,4 +1,4 @@
-package github.jommobile.android.core
+package github.jommobile.android
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -49,12 +49,18 @@ object ConnectionUtils {
     }
 
     fun checkInternetConnection(context: Context, pendingResult: BroadcastReceiver.PendingResult?) : LiveData<Boolean> {
-        val hasConnection = isConnectionAvailable(context)
+        val hasConnection =
+            isConnectionAvailable(
+                context
+            )
         if (hasConnection) {
-            val checker = InternetChecker(pendingResult)
+            val checker =
+                InternetChecker(
+                    pendingResult
+                )
             checker.execute()
             return checker.liveData
-        } else{
+        } else {
             return MutableLiveData(false);
         }
     }

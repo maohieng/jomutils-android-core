@@ -15,10 +15,10 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     protected val appExecutors: AppExecutors
 ) {
     interface DatabaseObserver<T> {
-        fun onChanged(dbSource: LiveData<T>?, dbData: T)
+        fun onChanged(dbSource: LiveData<T>, dbData: T)
     }
 
-    val result =
+    protected val result =
         MediatorLiveData<Resource<RESULT?>?>()
 
     protected fun setValue(newValue: Resource<RESULT?>?) {
@@ -28,14 +28,16 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     }
 
     @MainThread
-    open fun bind(): BoundResource<RESULT>? {
-        return bind(DatabaseObserver<RESULT> { dbSource: LiveData<RESULT>?, data: RESULT ->
-            result.addSource(
-                dbSource!!
-            ) { result: RESULT ->
-                setValue(
-                    Resource.Factory.success(result)
-                )
+    open fun bind(): BoundResource<RESULT> {
+        return bind(object : DatabaseObserver<RESULT> {
+            override fun onChanged(dbSource: LiveData<RESULT>, dbData: RESULT) {
+                result.addSource(
+                    dbSource
+                ) { result: RESULT ->
+                    setValue(
+                        Resource.Factory.success(result)
+                    )
+                }
             }
         })
     }
@@ -49,7 +51,11 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
             result.removeSource(dbSource)
             observer?.onChanged(dbSource, data)
         }
-        return BoundResource<RESULT> { result }
+        return object : BoundResource<RESULT> {
+            override fun asLiveData(): LiveData<Resource<RESULT?>?> {
+                return result
+            }
+        }
     }
 
     @MainThread

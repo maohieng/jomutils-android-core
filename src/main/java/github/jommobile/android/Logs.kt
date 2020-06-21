@@ -1,6 +1,7 @@
-package github.jommobile.android.core
+package github.jommobile.android
 
 import android.util.Log
+import github.jommobile.android.core.BuildConfig
 
 object Logs {
     private const val LOG_PREFIX = "jom_"
