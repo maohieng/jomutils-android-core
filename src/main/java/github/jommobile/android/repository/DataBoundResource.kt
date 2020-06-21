@@ -18,8 +18,11 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
         fun onChanged(dbSource: LiveData<T>, dbData: T)
     }
 
-    protected val result =
-        MediatorLiveData<Resource<RESULT?>?>()
+    protected val result: MediatorLiveData<Resource<RESULT?>?> = MediatorLiveData()
+
+    init {
+        result.value = null
+    }
 
     protected fun setValue(newValue: Resource<RESULT?>?) {
         if (result.value != newValue) {
@@ -44,7 +47,7 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
 
     @MainThread
     fun bind(observer: DatabaseObserver<RESULT>?): BoundResource<RESULT> {
-        result.value = Resource.Factory.loading()
+        setValue(Resource.Factory.loading())
         val dbSource = loadFromDb()
         Objects.requireNonNull(dbSource, "loadFromDb() must not return null.")
         result.addSource(dbSource) { data: RESULT ->

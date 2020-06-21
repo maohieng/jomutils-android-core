@@ -65,8 +65,9 @@ object ConnectionUtils {
         }
     }
 
-    class InternetChecker(var pendingResult: BroadcastReceiver.PendingResult?
-    ) : AsyncTask<Void, Integer, Boolean>() {
+    class InternetChecker(
+        var pendingResult: BroadcastReceiver.PendingResult?
+    ) : AsyncTask<Void, Int, Boolean>() {
 
         val liveData: MutableLiveData<Boolean> = MutableLiveData()
 

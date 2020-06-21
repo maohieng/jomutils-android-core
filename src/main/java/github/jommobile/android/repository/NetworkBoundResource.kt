@@ -92,7 +92,7 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
                         onFetchFailed(newNetworkSource.cause)
                         result.addSource(
                             dbSource
-                        ) { newData: RESULT ->
+                        ) {
                             setValue(
                                 error(
                                     newNetworkSource.message,
