@@ -15,7 +15,7 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     protected val appExecutors: AppExecutors
 ) {
     interface DatabaseObserver<T> {
-        fun onChanged(dbSource: LiveData<T>, dbData: T)
+        fun onChanged(dbSource: LiveData<T?>, dbData: T?)
     }
 
     protected val result: MediatorLiveData<Resource<RESULT?>?> = MediatorLiveData()
@@ -31,12 +31,12 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     }
 
     @MainThread
-    open fun bind(): BoundResource<RESULT> {
-        return bind(object : DatabaseObserver<RESULT> {
-            override fun onChanged(dbSource: LiveData<RESULT>, dbData: RESULT) {
+    open fun bind(): BoundResource<RESULT?> {
+        return bind(object : DatabaseObserver<RESULT?> {
+            override fun onChanged(dbSource: LiveData<RESULT?>, dbData: RESULT?) {
                 result.addSource(
                     dbSource
-                ) { result: RESULT ->
+                ) { result: RESULT? ->
                     setValue(
                         Resource.Factory.success(result)
                     )
@@ -46,15 +46,15 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     }
 
     @MainThread
-    fun bind(observer: DatabaseObserver<RESULT>?): BoundResource<RESULT> {
+    fun bind(observer: DatabaseObserver<RESULT?>?): BoundResource<RESULT?> {
         setValue(Resource.Factory.loading())
         val dbSource = loadFromDb()
         Objects.requireNonNull(dbSource, "loadFromDb() must not return null.")
-        result.addSource(dbSource) { data: RESULT ->
+        result.addSource(dbSource) { data: RESULT? ->
             result.removeSource(dbSource)
             observer?.onChanged(dbSource, data)
         }
-        return object : BoundResource<RESULT> {
+        return object : BoundResource<RESULT?> {
             override fun asLiveData(): LiveData<Resource<RESULT?>?> {
                 return result
             }
@@ -62,6 +62,6 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     }
 
     @MainThread
-    protected abstract fun loadFromDb(): LiveData<RESULT>
+    protected abstract fun loadFromDb(): LiveData<RESULT?>
 
 }

@@ -17,15 +17,15 @@ import java.util.*
 abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
     appExecutors: AppExecutors?
 ) : DataBoundResource<RESULT>(appExecutors!!) {
-    override fun bind(): BoundResource<RESULT> {
-        return bind(object : DatabaseObserver<RESULT> {
-            override fun onChanged(dbSource: LiveData<RESULT>, dbData: RESULT) {
+    override fun bind(): BoundResource<RESULT?> {
+        return bind(object : DatabaseObserver<RESULT?> {
+            override fun onChanged(dbSource: LiveData<RESULT?>, dbData: RESULT?) {
                 if (shouldFetch(dbData)) {
                     fetchFromNetwork(dbSource)
                 } else {
                     result.addSource(
                         dbSource
-                    ) { result: RESULT ->
+                    ) { result: RESULT? ->
                         setValue(
                             success(result)
                         )
@@ -36,9 +36,9 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
     }
 
     @MainThread
-    protected abstract fun shouldFetch(data: RESULT): Boolean
+    protected abstract fun shouldFetch(data: RESULT?): Boolean
 
-    private fun fetchFromNetwork(dbSource: LiveData<RESULT>) {
+    private fun fetchFromNetwork(dbSource: LiveData<RESULT?>) {
         val mainThread = appExecutors.mainThread()
         val callSource =
             createNetworkCall()
@@ -50,7 +50,7 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
         // we re-attach dbSource as a new source, it will dispatch its latest value quickly
         result.addSource(dbSource) { setValue(loading()) }
 
-        result.addSource(callSource) { newNetworkSource: Resource<NR>? ->
+        result.addSource(callSource) { newNetworkSource: Resource<NR?>? ->
             if (newNetworkSource == null) return@addSource
             if (newNetworkSource.status !== Resource.Status.LOADING) {
                 result.removeSource(callSource)
@@ -65,7 +65,7 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
                             // which may not be updated with latest results received from network.
                             result.addSource(
                                 loadFromDb()
-                            ) { newData: RESULT ->
+                            ) { newData: RESULT? ->
                                 setValue(
                                     success(
                                         newData
@@ -79,7 +79,7 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
                         // reload from disk whatever we had
                         result.addSource(
                             loadFromDb()
-                        ) { newData: RESULT ->
+                        ) { newData: RESULT? ->
                             setValue(
                                 success(
                                     newData
@@ -93,12 +93,11 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
                         result.addSource(
                             dbSource
                         ) {
-                            setValue(
-                                error(
-                                    newNetworkSource.message,
-                                    newNetworkSource.cause
-                                )
-                            )
+                            if (it == null) {
+                                setValue(error(newNetworkSource.message, newNetworkSource.cause))
+                            } else {
+                                setValue(success(it))
+                            }
                         }
                     }
                 }
@@ -107,12 +106,12 @@ abstract class NetworkBoundResource<RESULT, NR> @MainThread constructor(
     }
 
     @MainThread
-    protected abstract fun createNetworkCall(): LiveData<Resource<NR>>
+    protected abstract fun createNetworkCall(): LiveData<Resource<NR?>>
 
     @WorkerThread
-    protected abstract fun saveNetworkResult(networkResult: NR)
+    protected abstract fun saveNetworkResult(networkResult: NR?)
 
     @MainThread
-    protected fun onFetchFailed(cause: Throwable?) {
+    protected open fun onFetchFailed(cause: Throwable?) {
     }
 }
