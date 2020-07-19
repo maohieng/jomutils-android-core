@@ -46,7 +46,7 @@ abstract class DataBoundResource<RESULT> @MainThread constructor(//    private s
     }
 
     @MainThread
-    fun bind(observer: DatabaseObserver<RESULT?>?): BoundResource<RESULT?> {
+    protected fun bind(observer: DatabaseObserver<RESULT?>?): BoundResource<RESULT?> {
         setValue(Resource.Factory.loading())
         val dbSource = loadFromDb()
         Objects.requireNonNull(dbSource, "loadFromDb() must not return null.")
