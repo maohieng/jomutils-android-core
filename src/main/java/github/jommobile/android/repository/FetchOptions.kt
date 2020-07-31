@@ -1,15 +1,15 @@
 package github.jommobile.android.repository
 
 object FetchOptions {
-    fun always(): AlwaysFetch {
-        return AlwaysFetch()
+    fun always(): AlwaysFetchOption {
+        return AlwaysFetchOption()
     }
 
-    fun schedule(timeGapSeconds: Long): ScheduleFetch {
-        return ScheduleFetch(timeGapSeconds)
+    fun schedule(timeGapMillis: Long): ScheduleFetchOption {
+        return ScheduleFetchOption(timeGapMillis)
     }
 
-    fun never(): NeverFetch {
-        return NeverFetch()
+    fun never(): NeverFetchOption {
+        return NeverFetchOption()
     }
 }
